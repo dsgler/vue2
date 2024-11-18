@@ -38,6 +38,7 @@ function _traverse(val: any, seen: SimpleSet) {
     i = val.length
     while (i--) _traverse(val[i], seen)
   } else if (isRef(val)) {
+  // 在这里调用了getter，收集了依赖
     _traverse(val.value, seen)
   } else {
     keys = Object.keys(val)

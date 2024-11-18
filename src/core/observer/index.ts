@@ -19,6 +19,7 @@ import { isReadonly, isRef, TrackOpTypes, TriggerOpTypes } from '../../v3'
 
 const arrayKeys = Object.getOwnPropertyNames(arrayMethods)
 
+// 有啥用？
 const NO_INITIAL_VALUE = {}
 
 /**
@@ -54,8 +55,10 @@ export class Observer {
     this.dep = mock ? mockDep : new Dep()
     this.vmCount = 0
     def(value, '__ob__', this)
+    // 因为array的那几个方法是不能触发setter的，所以要改写
     if (isArray(value)) {
       if (!mock) {
+        // 检测浏览器是否支持 __proto__ 方法
         if (hasProto) {
           /* eslint-disable no-proto */
           ;(value as any).__proto__ = arrayMethods
@@ -63,6 +66,7 @@ export class Observer {
         } else {
           for (let i = 0, l = arrayKeys.length; i < l; i++) {
             const key = arrayKeys[i]
+            // 不能在原型链上设置就在 自己 上设置
             def(value, key, arrayMethods[key])
           }
         }
@@ -136,6 +140,7 @@ export function defineReactive(
 ) {
   const dep = new Dep()
 
+  // 一个属性的描述，包括value,writable,enumerable , get,set
   const property = Object.getOwnPropertyDescriptor(obj, key)
   if (property && property.configurable === false) {
     return
@@ -144,9 +149,10 @@ export function defineReactive(
   // cater for pre-defined getter/setters
   const getter = property && property.get
   const setter = property && property.set
+  // 在没有传入值的时候设置原始值
   if (
-    (!getter || setter) &&
-    (val === NO_INITIAL_VALUE || arguments.length === 2)
+    ((!getter) || setter) &&
+    (val === NO_INITIAL_VALUE || arguments.length === 2)//(这是可以相等的吗)原来传入的就是这个
   ) {
     val = obj[key]
   }
@@ -156,6 +162,7 @@ export function defineReactive(
     enumerable: true,
     configurable: true,
     get: function reactiveGetter() {
+      // 本来已经有getter的情况
       const value = getter ? getter.call(obj) : val
       if (Dep.target) {
         if (__DEV__) {

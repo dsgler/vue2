@@ -3,11 +3,14 @@ import { DebuggerOptions, DebuggerEventExtraInfo } from 'v3'
 
 let uid = 0
 
+// 这是一个清理垃圾堆的程序，在这里挂一会儿减少卡顿
 const pendingCleanupDeps: Dep[] = []
 
 export const cleanupDeps = () => {
   for (let i = 0; i < pendingCleanupDeps.length; i++) {
     const dep = pendingCleanupDeps[i]
+    // 过滤假值，刚刚设置为null的但是还没删掉的
+    // 在vue3里使用链表应该没有这个问题了？
     dep.subs = dep.subs.filter(s => s)
     dep._pending = false
   }
@@ -58,6 +61,7 @@ export default class Dep {
 
   depend(info?: DebuggerEventExtraInfo) {
     if (Dep.target) {
+      // 
       Dep.target.addDep(this)
       if (__DEV__ && info && Dep.target.onTrack) {
         Dep.target.onTrack({

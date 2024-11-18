@@ -233,6 +233,7 @@ export function defineComputed(
     sharedPropertyDefinition.get = shouldCache
       ? createComputedGetter(key)
       : createGetterInvoker(userDef)
+    // 显然computed watcher不应该有setter
     sharedPropertyDefinition.set = noop
   } else {
     sharedPropertyDefinition.get = userDef.get
@@ -255,7 +256,7 @@ export function defineComputed(
 
 function createComputedGetter(key) {
   return function computedGetter() {
-    const watcher = this._computedWatchers && this._computedWatchers[key]
+    const watcher: Watcher | undefined = this._computedWatchers && this._computedWatchers[key]
     if (watcher) {
       if (watcher.dirty) {
         watcher.evaluate()
@@ -269,6 +270,7 @@ function createComputedGetter(key) {
             key
           })
         }
+        // 第一次怕不是什么也收集不到
         watcher.depend()
       }
       return watcher.value
